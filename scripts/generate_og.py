@@ -27,7 +27,6 @@ def center_label(text, font, y, spacing=0):
     box = d.textbbox((0,0),text,font=font,stroke_width=0)
     x = (size[0]-(box[2]-box[0]))/2
     d.text((x,y),text,font=font,fill='white',stroke_width=1,stroke_fill='#5c5144')
-center_label('EL GRAN DÍA ESTÁ LLEGANDO',small_font,414)
 center_label('Salo & Mati',name_font,453)
 center_label('09  ·  01  ·  2027',small_font,568)
 canvas.convert('RGB').save(out,quality=89,optimize=True,progressive=True,subsampling=0)
