@@ -82,6 +82,7 @@ function choose(v){
  document.getElementById('foodbox').hidden=v!=='Sí';
  document.getElementById('otherbox').hidden=v!=='Sí'||document.getElementById('food').value!=='Otro (especificar)';
  familyArea.hidden=v!=='Sí';
+ familyMembers.querySelectorAll('input,select').forEach(control=>{control.disabled=v!=='Sí'});
  submitRsvp.textContent=v==='Sí'?'Confirmar asistencia':'Enviar respuesta';
  status.textContent='';
 }
@@ -97,7 +98,7 @@ function renderMember(){
  '<div class="family-field"><label for="fm-food-'+id+'">Preferencia alimentaria</label><select id="fm-food-'+id+'" data-field="alimentacion">'+foodOptions.map(v=>'<option>'+v+'</option>').join('')+'</select></div>'+
  '<div class="family-field" hidden><label for="fm-other-'+id+'">Detalle alimentario</label><input id="fm-other-'+id+'" data-field="detalle" maxlength="250" placeholder="Contanos qué necesitás"></div>';
  card.querySelector('.family-remove').onclick=()=>{if(sending)return;card.remove();updateMembers()};
- card.querySelector('select').onchange=e=>{card.querySelector('.family-field[hidden]')?.removeAttribute('data-unused');card.querySelectorAll('.family-field')[1].hidden=e.target.value!=='Otro (especificar)'};
+ card.querySelector('select').onchange=e=>{card.querySelectorAll('.family-field')[1].hidden=e.target.value!=='Otro (especificar)'};
  familyMembers.appendChild(card);updateMembers();card.querySelector('input').focus();
 }
 function updateMembers(){
