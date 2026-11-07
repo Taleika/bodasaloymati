@@ -6,7 +6,7 @@
 const SHEET_ID = '1yu2zT4ilOlXZWi3LUqfU6j-aFcb1OgFLR2IWNh7_YgY';
 const SHEET_TAB = 'Confirmaciones';
 const TARGET_ORIGIN = 'https://taleika.github.io';
-const HEADERS = ['Fecha de recepción','Nombre','Apellido','Asistencia','Email','Teléfono','Preferencia alimentaria','Detalle','Origen'];
+const HEADERS = ['Fecha de recepción','Nombre','Apellido','Asistencia','Email','Teléfono','Preferencia alimentaria','Detalle','Origen','Canciones sugeridas'];
 
 function doPost(e) {
   let payload = {source:'salo-mati-rsvp',ok:false,requestId:'',message:'No se registró la respuesta.'};
@@ -16,6 +16,34 @@ function doPost(e) {
     if (!/^[A-Za-z0-9_-]{16,90}$/.test(nonce)) throw new Error('ID de envío inválido.');
     payload.requestId = nonce;
     if (String(p.website || '').trim()) throw new Error('Envío rechazado.');
+    if (p.tipo === 'playlist') {
+      let songs;
+      try { songs = JSON.parse(String(p.canciones || '')); }
+      catch (parseErr) { throw new Error('No pudimos interpretar las canciones.'); }
+      if (!Array.isArray(songs) || songs.length < 1 || songs.length > 5) {
+        throw new Error('Podés sugerir entre una y cinco canciones.');
+      }
+      const cleanSongs = songs.map(function(song) {
+        const titulo = clean_(song && song.titulo, 120);
+        const interprete = clean_(song && song.interprete, 120);
+        if (!titulo || !interprete) throw new Error('Indicá el tema y su intérprete en cada canción.');
+        return titulo + ' — ' + interprete;
+      });
+      const lock = LockService.getScriptLock();
+      if (!lock.tryLock(15000)) throw new Error('Servidor ocupado. Intentá nuevamente.');
+      try {
+        const ss = SpreadsheetApp.openById(SHEET_ID);
+        let sh = ss.getSheetByName(SHEET_TAB);
+        if (!sh) sh = ss.insertSheet(SHEET_TAB);
+        if (sh.getLastRow() === 0) sh.appendRow(HEADERS);
+        else sh.getRange(1,10).setValue('Canciones sugeridas');
+        sh.appendRow([new Date(),'','','','','','','','Sugerencia musical',safe_(cleanSongs.map(function(song,i){return (i+1)+'. '+song;}).join(' | '))]);
+      } finally {
+        lock.releaseLock();
+      }
+      payload.ok = true;
+      payload.message = '¡Gracias! Tus canciones fueron sugeridas.';
+    } else {
     const name = clean_(p.nombre,100);
     const lastname = clean_(p.apellido,100);
     const answer = clean_(p.asistencia,4);
@@ -38,6 +66,7 @@ function doPost(e) {
     }
     payload.ok = true;
     payload.message = 'Tu respuesta quedó registrada.';
+    }
   } catch (err) {
     payload.message = String(err.message || 'No se pudo registrar.');
   }
