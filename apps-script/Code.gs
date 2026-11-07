@@ -5,7 +5,7 @@
  */
 const SHEET_ID = '1yu2zT4ilOlXZWi3LUqfU6j-aFcb1OgFLR2IWNh7_YgY';
 const SHEET_TAB = 'Confirmaciones';
-const SONGS_TAB = 'canciones';
+const SONGS_TAB = 'Canciones';
 const TARGET_ORIGIN = 'https://taleika.github.io';
 const HEADERS = ['Fecha de recepción','Nombre','Apellido','Asistencia','Email','Teléfono','Preferencia alimentaria','Detalle','Origen'];
 const SONG_HEADERS = ['Fecha de recepción','Canción','Intérprete'];
