@@ -5,8 +5,10 @@
  */
 const SHEET_ID = '1yu2zT4ilOlXZWi3LUqfU6j-aFcb1OgFLR2IWNh7_YgY';
 const SHEET_TAB = 'Confirmaciones';
+const SONGS_TAB = 'canciones';
 const TARGET_ORIGIN = 'https://taleika.github.io';
-const HEADERS = ['Fecha de recepción','Nombre','Apellido','Asistencia','Email','Teléfono','Preferencia alimentaria','Detalle','Origen','Canciones sugeridas'];
+const HEADERS = ['Fecha de recepción','Nombre','Apellido','Asistencia','Email','Teléfono','Preferencia alimentaria','Detalle','Origen'];
+const SONG_HEADERS = ['Fecha de recepción','Canción','Intérprete'];
 
 function doPost(e) {
   let payload = {source:'salo-mati-rsvp',ok:false,requestId:'',message:'No se registró la respuesta.'};
@@ -27,17 +29,18 @@ function doPost(e) {
         const titulo = clean_(song && song.titulo, 120);
         const interprete = clean_(song && song.interprete, 120);
         if (!titulo || !interprete) throw new Error('Indicá el tema y su intérprete en cada canción.');
-        return titulo + ' — ' + interprete;
+        return [safe_(titulo),safe_(interprete)];
       });
       const lock = LockService.getScriptLock();
       if (!lock.tryLock(15000)) throw new Error('Servidor ocupado. Intentá nuevamente.');
       try {
         const ss = SpreadsheetApp.openById(SHEET_ID);
-        let sh = ss.getSheetByName(SHEET_TAB);
-        if (!sh) sh = ss.insertSheet(SHEET_TAB);
-        if (sh.getLastRow() === 0) sh.appendRow(HEADERS);
-        else sh.getRange(1,10).setValue('Canciones sugeridas');
-        sh.appendRow([new Date(),'','','','','','','','Sugerencia musical',safe_(cleanSongs.map(function(song,i){return (i+1)+'. '+song;}).join(' | '))]);
+        let sh = ss.getSheetByName(SONGS_TAB);
+        if (!sh) sh = ss.insertSheet(SONGS_TAB);
+        if (sh.getLastRow() === 0) sh.appendRow(SONG_HEADERS);
+        const receivedAt = new Date();
+        const rows = cleanSongs.map(function(song) { return [receivedAt,song[0],song[1]]; });
+        sh.getRange(sh.getLastRow()+1,1,rows.length,SONG_HEADERS.length).setValues(rows);
       } finally {
         lock.releaseLock();
       }
